@@ -1,0 +1,9 @@
+[workspace]
+members = [
+    "server",
+    "wasm_client",
+]
+
+[profile.release]
+lto = true
+opt-level = 'z'
