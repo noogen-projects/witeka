@@ -1,5 +1,9 @@
 #![recursion_limit = "512"]
 
-pub mod component;
-pub mod dto;
-pub mod widget;
+pub use self::component::Root;
+
+mod component;
+mod dto;
+mod service;
+mod utils;
+mod widget;

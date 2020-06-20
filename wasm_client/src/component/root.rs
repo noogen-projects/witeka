@@ -1,7 +1,10 @@
+use gloo::events::EventListener;
 use yew::{html, Component, ComponentLink, Html, ShouldRender};
 
 use crate::{
     dto::User,
+    service::HistoryService,
+    utils::{location_path, PageData},
     widget::{self, TableCell, TableRow},
 };
 
@@ -9,6 +12,7 @@ pub struct Root {
     user_name: String,
     current_page: Page,
     link: ComponentLink<Self>,
+    _back_listener: EventListener,
 }
 
 enum Page {
@@ -20,6 +24,8 @@ enum Page {
 pub enum Msg {
     NewWiki,
     AddWiki,
+    ToWiki(String),
+    ToHistoryBack,
 }
 
 impl Component for Root {
@@ -27,10 +33,18 @@ impl Component for Root {
     type Properties = ();
 
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
+        let path = location_path();
+        if path == "/" {
+            HistoryService::change_url("/user");
+        };
+        let callback = link.callback(|_| Msg::ToHistoryBack);
+        let _back_listener = HistoryService::subscribe_to_back(move |_| callback.emit(()));
+
         Self {
-            user_name: "Vasia".to_string(),
+            user_name: "user".to_string(),
             current_page: Page::Dashboard,
             link,
+            _back_listener,
         }
     }
 
@@ -40,15 +54,39 @@ impl Component for Root {
                 self.current_page = Page::NewWiki;
                 true
             }
+            Msg::ToWiki(wiki) => {
+                goto_wiki(&wiki);
+                self.current_page = Page::Wiki(wiki);
+                true
+            }
+            Msg::ToHistoryBack => {
+                let PageData { wiki, .. } = PageData::from_location_path();
+                if let Some(wiki) = wiki {
+                    self.current_page = Page::Wiki(wiki);
+                } else {
+                    self.current_page = Page::Dashboard;
+                }
+                true
+            }
             _ => false,
         }
     }
 
+    fn change(&mut self, _props: Self::Properties) -> bool {
+        false
+    }
+
     fn view(&self) -> Html {
-        let page = match &self.current_page {
-            Page::Dashboard => self.view_dashboard(),
-            Page::NewWiki => todo!(),
-            Page::Wiki(wiki) => todo!(),
+        let PageData { path, wiki, .. } = PageData::from_location_path();
+
+        let page = if let Some(wiki) = wiki {
+            self.view_wiki(&wiki)
+        } else {
+            match &self.current_page {
+                Page::Dashboard => self.view_dashboard(),
+                Page::NewWiki => self.view_new_wiki(),
+                Page::Wiki(wiki) => self.view_wiki(&wiki),
+            }
         };
 
         html! {
@@ -80,7 +118,7 @@ impl Component for Root {
                         <div class = "mdc-top-app-bar__row">
                             <section class = "mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
                                 <button class = "material-icons mdc-top-app-bar__navigation-icon mdc-icon-button">{ "menu" }</button>
-                                <span class = "mdc-top-app-bar__title">{ "Witeka" }</span>
+                                <span class = "mdc-top-app-bar__title">{ "Witeka " } { path }</span>
                             </section>
                         </div>
                     </header>
@@ -110,14 +148,49 @@ impl Root {
             TableCell::text("2020-05-20"),
         ])];
 
+        let table = widget::table(
+            "wiki_list",
+            "Wikis",
+            &[TableCell::text("Name"), TableCell::text("Update")],
+            &wikis,
+            Some(|row: &TableRow| {
+                let wiki: String = row[0].content().to_string();
+                self.link.callback(move |_| Msg::ToWiki(wiki.clone()))
+            }),
+        );
+
         html! {
             <div class = "content">
                 <h1 class = "mdc-typography--headline4">{ "Wikis" }</h1>
                 <div class = "new-wiki-button">
                     { widget::button("button", "New wiki", self.link.callback(|_| Msg::NewWiki)) }
                 </div>
-                { widget::table("wiki_list", "Wikis", &[TableCell::text("Name"), TableCell::text("Update")], &wikis) }
+                { table }
             </div>
         }
+    }
+
+    fn view_new_wiki(&self) -> Html {
+        todo!()
+    }
+
+    fn view_wiki(&self, wiki: &str) -> Html {
+        html! {
+            <div class = "content">
+                <h1 class = "mdc-typography--headline4">{ wiki }</h1>
+                <lew::SimpleEditor id = "wiki-editor" />
+            </div>
+        }
+    }
+}
+
+fn goto_wiki(wiki: impl AsRef<str>) {
+    let wiki = wiki.as_ref();
+    let path = location_path();
+    let path = path.trim_end_matches(|c| c == '/');
+    if !path.ends_with(wiki) {
+        HistoryService::change_url(format!("{}/{}", path, wiki));
+    } else {
+        HistoryService::change_url(path);
     }
 }

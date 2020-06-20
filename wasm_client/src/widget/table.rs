@@ -5,7 +5,7 @@ use std::{
     vec::IntoIter,
 };
 
-use yew::{html, Html};
+use yew::{html, Callback, Html, MouseEvent};
 
 type Content<'a> = Cow<'a, str>;
 
@@ -21,6 +21,13 @@ impl<'a> TableCell<'a> {
 
     pub fn text(content: impl Into<Content<'a>>) -> Self {
         TableCell::Text(content.into())
+    }
+
+    pub fn content(&self) -> &Content<'a> {
+        match self {
+            TableCell::Numeric(content) => content,
+            TableCell::Text(content) => content,
+        }
     }
 }
 
@@ -51,7 +58,7 @@ impl<'a> IntoIterator for TableRow<'a> {
     type Item = TableCell<'a>;
 
     #[inline]
-    fn into_iter(mut self) -> IntoIter<TableCell<'a>> {
+    fn into_iter(self) -> IntoIter<TableCell<'a>> {
         self.0.into_iter()
     }
 }
@@ -74,7 +81,12 @@ impl<'a, 'b> IntoIterator for &'a mut TableRow<'b> {
     }
 }
 
-pub fn table(id: impl AsRef<str>, caption: impl AsRef<str>, head: &[TableCell], body: &[TableRow]) -> Html {
+pub type ClickOnRowFn = Option<fn(&TableRow) -> Callback<MouseEvent>>;
+
+pub fn table(
+    id: impl AsRef<str>, caption: impl AsRef<str>, head: &[TableCell], body: &[TableRow],
+    click_on_row: Option<impl Fn(&TableRow) -> Callback<MouseEvent>>,
+) -> Html {
     let id = id.as_ref();
     let caption = caption.as_ref();
 
@@ -89,10 +101,19 @@ pub fn table(id: impl AsRef<str>, caption: impl AsRef<str>, head: &[TableCell], 
                 <tbody class = "mdc-data-table__content">{
                     body
                         .into_iter()
-                        .map(|row| html! {
-                            <tr class = "mdc-data-table__row">
-                                { row.into_iter().map(|cell| view_body_cell(cell)).collect::<Html>() }
-                            </tr>
+                        .map(|row| {
+                            let onclick = click_on_row.as_ref().map(|fun| fun(&row));
+                            let cells = row.into_iter().map(|cell| view_body_cell(cell)).collect::<Html>();
+
+                            if let Some(onclick) = onclick {
+                                html! {
+                                    <tr class = "mdc-data-table__row" onclick = onclick>{ cells }</tr>
+                                }
+                            } else {
+                                html! {
+                                    <tr class = "mdc-data-table__row">{ cells }</tr>
+                                }
+                            }
                         })
                         .collect::<Html>()
                 }</tbody>

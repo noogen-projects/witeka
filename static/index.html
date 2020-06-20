@@ -1,18 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Webapp</title>
+    <title>Witeka</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="mdc/material-components-web-5.1.0.min.css">
-    <link rel="stylesheet" href="mdc/icon.css">
-    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="/mdc/material-components-web-5.1.0.min.css">
+    <link rel="stylesheet" href="/mdc/icon.css">
+    <link rel="stylesheet" href="/main.css">
 </head>
 <body class="mdc-typography">
-    <script src="mdc/material-components-web-5.1.0.min.js"></script>
+    <div id="root">
+        <div class = "drawer-frame-root">
+            <aside class = "mdc-drawer mdc-drawer--dismissible">
+            </aside>
+            <div class = "mdc-drawer-app-content">
+                <header id = "app-bar" class = "mdc-top-app-bar mdc-top-app-bar--fixed drawer-top-app-bar">
+                    <div class = "mdc-top-app-bar__row">
+                        <section class = "mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
+                            <button class = "material-icons mdc-top-app-bar__navigation-icon mdc-icon-button"></button>
+                            <span class = "mdc-top-app-bar__title">Witeka</span>
+                        </section>
+                    </div>
+                </header>
+            </div>
+        </div>
+    </div>
+    <script src="/mdc/material-components-web-5.1.0.min.js"></script>
     <script type="module">
         // For more details see https://rustwasm.github.io/docs/wasm-bindgen/examples/without-a-bundler.html
-        import init from './app/wasm_client.js';
+        import init from '/app/wasm_client.js';
         init();
     </script>
 </body>

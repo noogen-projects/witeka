@@ -26,9 +26,10 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .data(pool.clone())
-            .service(api::v1::user)
+            .service(api::v1::user) // todo: use scope for API handlers: https://docs.rs/actix-web/*/actix_web/struct.Scope.html
             .service(api::v1::group)
             .service(api::v1::space)
+            .service(fs::Files::new("/{uri:[A-Za-z_]+(/[A-Za-z_]*/?)?$}", "./static/").index_file("index.html"))
             .service(fs::Files::new("/", "./static/").index_file("index.html"))
     })
     .bind(&settings.app_address)?
