@@ -5,7 +5,7 @@ use crate::{
     dto::User,
     service::HistoryService,
     utils::{location_path, PageData},
-    widget::{self, TableCell, TableRow},
+    widget::{self, ButtonStyle, TableCell, TableRow},
 };
 
 pub struct Root {
@@ -23,7 +23,7 @@ enum Page {
 
 pub enum Msg {
     NewWiki,
-    AddWiki,
+    AddWiki(String),
     ToWiki(String),
     ToHistoryBack,
 }
@@ -163,7 +163,7 @@ impl Root {
             <div class = "content">
                 <h1 class = "mdc-typography--headline4">{ "Wikis" }</h1>
                 <div class = "new-wiki-button">
-                    { widget::button("button", "New wiki", self.link.callback(|_| Msg::NewWiki)) }
+                    { widget::button("button", "New wiki", ButtonStyle::Text, self.link.callback(|_| Msg::NewWiki)) }
                 </div>
                 { table }
             </div>
@@ -171,7 +171,15 @@ impl Root {
     }
 
     fn view_new_wiki(&self) -> Html {
-        todo!()
+        html! {
+            <div class = "content">
+                <h1 class = "mdc-typography--headline4">{ "Add wiki" }</h1>
+                { widget::text_field("new-wiki-name", "Wiki name") }
+                <div class = "right-button">
+                    { widget::button("create-wiki", "Create", ButtonStyle::Raised, self.link.callback(|_| Msg::AddWiki("".to_string()))) }
+                </div>
+            </div>
+        }
     }
 
     fn view_wiki(&self, wiki: &str) -> Html {

@@ -72,3 +72,12 @@ body {
     align-items: center;
     justify-content: center;
 }
+
+.right-button {
+    margin-top: 10px;
+    float: right;
+}
+
+#new-wiki-name {
+    width: 100%;
+}
